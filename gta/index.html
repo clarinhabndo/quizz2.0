@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz GTA VI - Alura Start</title>
+  <style>
+    :root {
+      --bg-color: #0f0c20;
+      --card-bg: #1e1a3a;
+      --accent-pink: #ff007f;
+      --accent-cyan: #00f0ff;
+      --text-color: #ffffff;
+      --correct-color: #00e676;
+      --wrong-color: #ff1744;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, var(--bg-color), #20002c);
+      color: var(--text-color);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .quiz-container {
+      background-color: var(--card-bg);
+      width: 100%;
+      max-width: 550px;
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(255, 0, 127, 0.3);
+      border: 1px solid rgba(255, 0, 127, 0.2);
+    }
+
+    h1 {
+      text-align: center;
+      color: var(--accent-cyan);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      text-shadow: 0 0 8px var(--accent-cyan);
+    }
+
+    .welcome-msg {
+      text-align: center;
+      color: var(--accent-pink);
+      font-weight: bold;
+      margin-bottom: 24px;
+      font-size: 1.1rem;
+    }
+
+    .question-box {
+      margin-bottom: 20px;
+    }
+
+    .question-title {
+      font-size: 1.2rem;
+      margin-bottom: 16px;
+      line-height: 1.4;
+    }
+
+    .options-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .btn-option {
+      background: rgba(255, 255, 255, 0.05);
+      border: 2px solid var(--accent-cyan);
+      color: var(--text-color);
+      padding: 14px;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: left;
+    }
+
+    .btn-option:hover {
+      background: var(--accent-cyan);
+      color: #000;
+      font-weight: bold;
+      box-shadow: 0 0 10px var(--accent-cyan);
+    }
+
+    .feedback {
+      margin-top: 20px;
+      padding: 12px;
+      border-radius: 8px;
+      text-align: center;
+      font-weight: bold;
+      min-height: 48px;
+    }
+
+    .feedback.correct {
+      background-color: rgba(0, 230, 118, 0.2);
+      border: 1px solid var(--correct-color);
+      color: var(--correct-color);
+    }
+
+    .feedback.wrong {
+      background-color: rgba(255, 23, 68, 0.2);
+      border: 1px solid var(--wrong-color);
+      color: var(--wrong-color);
+    }
+
+    .footer-actions {
+      margin-top: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .score {
+      font-size: 1.1rem;
+      color: var(--accent-cyan);
+    }
+
+    .btn-next {
+      background-color: var(--accent-pink);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .btn-next:hover {
+      opacity: 0.9;
+      transform: scale(1.05);
+    }
+
+    .btn-next:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      transform: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="quiz-container">
+    <h1>Quiz GTA VI</h1>
+    <div id="welcome" class="welcome-msg"></div>
+
+    <div id="quiz-content">
+      <div class="question-box">
+        <h2 id="question" class="question-title">Carregando pergunta...</h2>
+        <div id="options" class="options-grid"></div>
+      </div>
+
+      <div id="feedback" class="feedback">Selecione uma resposta...</div>
+
+      <div class="footer-actions">
+        <div class="score">Pontos: <span id="score-val">0</span></div>
+        <button id="btn-next" class="btn-next" disabled>Próxima Pergunta</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Módulo ES6 criando dynamic export e import dentro do mesmo arquivo -->
+  <script type="module">
+    // -------------------------------------------------------------------------
+    // 1. DEFINIÇÃO DO MÓDULO (exportando funções utilitárias)
+    // -------------------------------------------------------------------------
+    // Criamos um módulo em memória para demonstrar a síntese de import/export
+    const utilsModuleCode = `
+      // Algoritmo de Aleatoriedade para números inteiros
+      export function gerarNumeroAleatorio(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+      }
+
+      // Algoritmo de Aleatoriedade para embaralhar um array (Fisher-Yates)
+      export function embaralharArray(array) {
+        const cópia = [...array];
+        for (let i = cópia.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [cópia[i], cópia[j]] = [cópia[j], cópia[i]];
+        }
+        return cópia;
+      }
+
+      // Método replace para formatação de texto
+      export function formatarMensagem(template, marcador, valor) {
+        return template.replace(marcador, valor);
+      }
+    `;
+
+    // Carrega a string como um módulo ES6 válido via Blob/Data URI
+    const blob = new Blob([utilsModuleCode], { type: 'text/javascript' });
+    const moduleUrl = URL.createObjectURL(blob);
+
+    // -------------------------------------------------------------------------
+    // 2. IMPORTAÇÃO DO MÓDULO (utilizando 'import')
+    // -------------------------------------------------------------------------
+    const { gerarNumeroAleatorio, embaralharArray, formatarMensagem } = await import(moduleUrl);
+
+    // =========================================================================
+    // 3. FLUXOGRAMA DE EXECUÇÃO
+    // =========================================================================
+    /*
+      FLUXO:
+      [Início] ──► [Aplica .replace() na mensagem de boas-vindas]
+         │
+         ▼
+      [Embaralha Lista de Perguntas] (Aleatoriedade)
+         │
+         ▼
+      [Carrega Pergunta Atual] ──► [Embaralha Alternativas] (Aleatoriedade)
+         │
+         ▼
+      [Usuário clica na Opção]
+         │
+         ▼
+      [Loop 'for...of' varrendo opções para validação]
+         │
+         ├───► [Condicional: Opção clicada é igual à da varredura?]
+         │        │
+         │        ├── SIM ──► [Condicional: É a correta?]
+         │        │              ├── SIM ──► [+Pontos, .replace() de Sucesso]
+         │        │              └── NÃO ──► [.replace() de Erro]
+         │        │              │
+         │        │              └──► [break (Parada no loop)]
+         │        │
+         │        └── NÃO ──► Continua verificação...
+         ▼
+      [Exibe Resultado / Habilita botão 'Próxima']
+    */
+
+    // =========================================================================
+    // 4. LÓGICA DO QUIZ
+    // =========================================================================
+    const jogador = "Clarinha";
+    let pontuacao = 0;
+    let indicePerguntaAtual = 0;
+
+    const bancoDePerguntas = [
+      {
+        pergunta: "Em que ano foi lançado o primeiro trailer oficial do GTA VI?",
+        opcoes: ["2021", "2022", "2023", "2024"],
+        respostaCorreta: "2023"
+      },
+      {
+        pergunta: "Em qual estado ou cidade fictícia se passa o jogo?",
+        opcoes: ["Liberty City", "Vice City", "San Andreas", "Los Santos"],
+        respostaCorreta: "Vice City"
+      },
+      {
+        pergunta: "Qual o nome da protagonista feminina confirmada para o jogo?",
+        opcoes: ["Lucia", "Amanda", "Catalina", "Mercedes"],
+        respostaCorreta: "Lucia"
+      }
+    ];
+
+    // Elementos da DOM
+    const welcomeEl = document.getElementById('welcome');
+    const questionEl = document.getElementById('question');
+    const optionsEl = document.getElementById('options');
+    const feedbackEl = document.getElementById('feedback');
+    const scoreValEl = document.getElementById('score-val');
+    const btnNext = document.getElementById('btn-next');
+
+    // Boas-vindas personalizadas usando .replace()
+    const templateBoasVindas = "Bem-vindo(a) ao Quiz, {nome}!";
+    welcomeEl.textContent = formatarMensagem(templateBoasVindas, "{nome}", jogador);
+
+    // Embaralha a ordem inicial das perguntas usando o módulo importado
+    const perguntasSorteadas = embaralharArray(bancoDePerguntas);
+
+    function carregarPergunta() {
+      const q = perguntasSorteadas[indicePerguntaAtual];
+      questionEl.textContent = `${indicePerguntaAtual + 1}. ${q.pergunta}`;
+      optionsEl.innerHTML = '';
+      feedbackEl.className = 'feedback';
+      feedbackEl.textContent = 'Escolha uma das alternativas...';
+      btnNext.disabled = true;
+
+      // Embaralha as alternativas usando a função de aleatoriedade
+      const opcoesEmbaralhadas = embaralharArray(q.opcoes);
+
+      opcoesEmbaralhadas.forEach(opcaoText => {
+        const btn = document.createElement('button');
+        btn.className = 'btn-option';
+        btn.textContent = opcaoText;
+        btn.addEventListener('click', () => verificarResposta(opcaoText, q));
+        optionsEl.appendChild(btn);
+      });
+    }
+
+    function verificarResposta(opcaoEscolhida, perguntaObjeto) {
+      // Desabilita todas as opções após a escolha
+      const botoes = optionsEl.querySelectorAll('.btn-option');
+      botoes.forEach(b => b.disabled = true);
+
+      // USO DO 'for...of' COM CONDIÇÃO DE PARADA ('break')
+      for (const opcao of perguntaObjeto.opcoes) {
+
+        // CONDICIONAL
+        if (opcao === opcaoEscolhida) {
+          
+          // Aplicação de condicionais para validar o acerto
+          if (opcaoEscolhida === perguntaObjeto.respostaCorreta) {
+            pontuacao += 10;
+            scoreValEl.textContent = pontuacao;
+
+            const msgSucesso = formatarMensagem("Resposta correta! Parabéns, {nome}!", "{nome}", jogador);
+            feedbackEl.textContent = msgSucesso;
+            feedbackEl.className = 'feedback correct';
+          } else {
+            const msgErro = formatarMensagem("Resposta incorreta! A certa era: {correta}.", "{correta}", perguntaObjeto.respostaCorreta);
+            feedbackEl.textContent = msgErro;
+            feedbackEl.className = 'feedback wrong';
+          }
+
+          // CONDIÇÃO DE PARADA (break): encerra o loop de busca assim que a opção correspondente é processada
+          break;
+        }
+      }
+
+      btnNext.disabled = false;
+    }
+
+    btnNext.addEventListener('click', () => {
+      indicePerguntaAtual++;
+      
+      // CONDICIONAL: Verifica se ainda existem perguntas
+      if (indicePerguntaAtual < perguntasSorteadas.length) {
+        carregarPergunta();
+      } else {
+        finalizarQuiz();
+      }
+    });
+
+    function finalizarQuiz() {
+      const templateFinal = "Fim do Quiz! Você fez {pontos} pontos.";
+      questionEl.textContent = formatarMensagem(templateFinal, "{pontos}", pontuacao);
+      optionsEl.innerHTML = '';
+      btnNext.style.display = 'none';
+
+      if (pontuacao === bancoDePerguntas.length * 10) {
+        feedbackEl.textContent = "Excelente! Você acertou todas as questões!";
+        feedbackEl.className = 'feedback correct';
+      } else {
+        feedbackEl.textContent = "Bom trabalho! Continue praticando para acertar tudo.";
+        feedbackEl.className = 'feedback';
+      }
+    }
+
+    // Inicializa a primeira pergunta
+    carregarPergunta();
+  </script>
+</body>
+</html>
